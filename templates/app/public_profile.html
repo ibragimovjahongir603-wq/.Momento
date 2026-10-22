@@ -1,0 +1,74 @@
+{% extends 'app/base.html' %}
+{% block title %}{{ person.username }} · Momento{% endblock %}
+{% block content %}
+<section class="community-page">
+  <a class="back-link" href="{% url 'home' %}">← Asosiy sahifaga qaytish</a>
+  <div class="community-panel">
+    <div class="public-profile-head">
+      <span class="avatar avatar-large">{% if person.profile.avatar %}<img src="{{ person.profile.avatar.url }}" alt="">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+      <div><p class="eyebrow">Momento A’ZOSI</p><h1>{{ person.username }}</h1>
+        <div class="profile-stat-links">
+          <a href="#photos"><strong>{{ posts|length }}</strong><span>post</span></a>
+          <a href="{% url 'followers' person.username %}"><strong>{{ person.followers.count }}</strong><span>obunachi</span></a>
+          <a href="{% url 'following' person.username %}"><strong>{{ person.following.count }}</strong><span>obuna</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="social-actions">
+      <form method="post" action="{% url 'follow_toggle' person.username %}">{% csrf_token %}<button class="button button-primary" type="submit">{% if is_following %}Obunani bekor qilish{% else %}Obuna bo‘lish{% endif %}</button></form>
+      {% if friend_request and friend_request.status == 'accepted' %}
+        <a class="button button-outline" href="{% url 'conversation' person.username %}">Xabar yozish</a>
+      {% elif friend_request and friend_request.to_user_id == user.id %}
+        <form method="post" action="{% url 'friend_action' person.username 'accept' %}">{% csrf_token %}<button class="button button-primary" type="submit">Do‘stlikni qabul qilish</button></form>
+        <form method="post" action="{% url 'friend_action' person.username 'reject' %}">{% csrf_token %}<button class="button button-outline" type="submit">Rad etish</button></form>
+      {% elif friend_request %}
+        <span class="pending-label">Do‘stlik so‘rovi yuborilgan</span>
+      {% else %}
+        <form method="post" action="{% url 'friend_action' person.username 'send' %}">{% csrf_token %}<button class="button button-outline" type="submit">Do‘st qo‘shish</button></form>
+      {% endif %}
+    </div>
+    {% if user.is_authenticated %}
+      <div class="follow-status-bar">
+        {% if is_following and is_followed_by %}
+          <span class="follow-status positive">Siz va {{ person.username }} bir-biringizni obuna qildingiz.</span>
+        {% elif is_following %}
+          <span class="follow-status neutral">Siz {{ person.username }}ga obuna bo‘lgansiz.</span>
+        {% elif is_followed_by %}
+          <span class="follow-status neutral">{{ person.username }} sizga obuna bo‘lgan.</span>
+        {% else %}
+          <span class="follow-status muted">Siz va {{ person.username }} o‘rtasida obuna aloqasi yo‘q.</span>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if stories %}
+      <section class="public-stories"><h2>Faol hikoyalar</h2><div class="story-list">{% for story in stories %}<article class="story-card">{% if story.video %}<video controls preload="metadata" playsinline><source src="{{ story.video.url }}">Brauzeringiz videoni qo‘llab-quvvatlamaydi.</video>{% else %}<img src="{{ story.image.url }}" alt="{{ story.caption|default:'Hikoya' }}">{% endif %}{% if story.caption %}<p>{{ story.caption }}</p>{% endif %}<time>{{ story.created_at|date:'j F, H:i' }}</time></article>{% endfor %}</div></section>
+    {% endif %}
+    <h2 class="section-title" id="photos">Suratlari</h2>
+    <div class="public-posts">
+      {% for post in posts %}
+        <article class="post">
+          {% if post.video %}
+            <video class="post-image post-video" controls preload="metadata" playsinline>
+              <source src="{{ post.video.url }}">
+              Brauzeringiz videoni qo‘llab-quvvatlamaydi.
+            </video>
+          {% elif post.image %}
+            <img class="post-image" src="{{ post.image.url }}" alt="{{ post.caption|default:'Momento tomonidan ulashilgan surat' }}">
+          {% endif %}
+          <div class="post-actions">
+            <form method="post" action="{% url 'toggle_like' post.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="like-button{% if post.is_liked %} is-liked{% endif %}" type="submit" aria-label="Yoqdi">{{ post.is_liked|yesno:"♥,♡" }}</button></form>
+            <span>{{ post.like_count }} ta yoqdi</span>
+            <button class="comment-count" type="button" data-comments-open="comments-dialog-{{ post.id }}" aria-label="{{ post.comment_count }} ta izohni ko‘rish">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2v-5.5A7.5 7.5 0 1 1 20 11.5Z"/></svg>
+              {{ post.comment_count }} ta izoh
+            </button>
+          </div>
+          {% if post.caption %}<p class="caption">{{ post.caption }}</p>{% endif %}
+          {% include 'app/partials/comment_section.html' with post=post %}
+        </article>
+      {% empty %}<p class="empty-community">Bu foydalanuvchida hali post yo‘q.</p>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

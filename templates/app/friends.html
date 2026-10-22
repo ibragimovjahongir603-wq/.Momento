@@ -1,0 +1,86 @@
+{% extends 'app/base.html' %}
+{% block title %}Do‘stlar · Kadr{% endblock %}
+{% block content %}
+<section class="community-page">
+  <div class="community-panel">
+    <header class="community-heading">
+      <div><p class="eyebrow">Momento HAMJAMIYATI</p><h1>Do‘stlar</h1><p class="community-subtitle">So‘rovlarni boshqaring va do‘stlaringiz bilan bog‘laning.</p></div>
+      <a class="community-heading-link" href="{% url 'search' %}">Odam topish <span aria-hidden="true">⌕</span></a>
+    </header>
+    <section class="community-section">
+      <div class="people-section-heading"><h2>Kelgan so‘rovlar</h2><span>{{ incoming|length }}</span></div>
+      <div class="people-list">
+      {% for request_item in incoming %}
+        <article class="person-row">
+          <a class="person-identity" href="{% url 'public_profile' request_item.from_user.username %}">
+            <span class="avatar avatar-discover">{% if request_item.from_user.profile.avatar %}<img src="{{ request_item.from_user.profile.avatar.url }}" alt="">{% else %}{{ request_item.from_user.username|first|upper }}{% endif %}</span>
+            <span class="person-copy"><strong>{{ request_item.from_user.username }}</strong><span>Sizga do‘stlik so‘rovi yubordi</span></span>
+          </a>
+          <div class="person-actions">
+            <form method="post" action="{% url 'friend_action' request_item.from_user.username 'accept' %}">{% csrf_token %}<button class="button button-follow" type="submit">Qabul qilish</button></form>
+            <form method="post" action="{% url 'friend_action' request_item.from_user.username 'reject' %}">{% csrf_token %}<button class="button button-profile" type="submit">Rad etish</button></form>
+          </div>
+        </article>
+      {% empty %}
+        <div class="community-empty community-empty-compact"><span aria-hidden="true">✓</span><strong>Yangi so‘rov yo‘q</strong><p>Do‘stlik so‘rovlari shu yerda ko‘rinadi.</p></div>
+      {% endfor %}
+      </div>
+    </section>
+    <section class="community-section">
+      <div class="people-section-heading"><h2>Obunachilar</h2><span>{{ followers|length }}</span></div>
+      <div class="people-list">
+      {% for person in followers %}
+        <article class="person-row friend-person">
+          <a class="person-identity" href="{% url 'public_profile' person.username %}">
+            <span class="avatar avatar-discover">{% if person.profile.avatar %}<img src="{{ person.profile.avatar.url }}" alt="">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+            <span class="person-copy"><strong>{{ person.username }}</strong><span>Sizga obuna bo‘lgan</span></span>
+          </a>
+          <div class="person-actions">
+            <a class="button button-profile" href="{% url 'public_profile' person.username %}">Profil</a>
+          </div>
+        </article>
+      {% empty %}
+        <div class="community-empty community-empty-compact"><span aria-hidden="true">◎</span><strong>Hech kim sizga obuna bo‘lmagan</strong><p>Profilingizga odamlar obuna bo‘lganda, bu yerda ko‘rinadi.</p></div>
+      {% endfor %}
+      </div>
+    </section>
+    <section class="community-section">
+      <div class="people-section-heading"><h2>Men obuna bo‘lganlar</h2><span>{{ following|length }}</span></div>
+      <div class="people-list">
+      {% for person in following %}
+        <article class="person-row friend-person">
+          <a class="person-identity" href="{% url 'public_profile' person.username %}">
+            <span class="avatar avatar-discover">{% if person.profile.avatar %}<img src="{{ person.profile.avatar.url }}" alt="">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+            <span class="person-copy"><strong>{{ person.username }}</strong><span>Siz obuna bo‘lgan</span></span>
+          </a>
+          <div class="person-actions">
+            <a class="button button-follow" href="{% url 'public_profile' person.username %}">Ko‘rish</a>
+          </div>
+        </article>
+      {% empty %}
+        <div class="community-empty community-empty-compact"><span aria-hidden="true">↗</span><strong>Hali kimga obuna bo‘lmagansiz</strong><p><a href="{% url 'search' %}">Odamlarni toping</a> va obuna bo‘ling.</p></div>
+      {% endfor %}
+      </div>
+    </section>
+    <section class="community-section">
+      <div class="people-section-heading"><h2>Do‘stlaringiz</h2><span>{{ friend_users|length }}</span></div>
+      <div class="people-list">
+      {% for person in friend_users %}
+        <article class="person-row friend-person">
+          <a class="person-identity" href="{% url 'public_profile' person.username %}">
+            <span class="avatar avatar-discover">{% if person.profile.avatar %}<img src="{{ person.profile.avatar.url }}" alt="">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+            <span class="person-copy"><strong>{{ person.username }}</strong><span>Do‘stingiz</span></span>
+          </a>
+          <div class="person-actions">
+            <a class="button button-follow" href="{% url 'conversation' person.username %}">Xabar yozish</a>
+            <a class="button button-profile" href="{% url 'public_profile' person.username %}">Profil</a>
+          </div>
+        </article>
+      {% empty %}
+        <div class="community-empty community-empty-compact"><span aria-hidden="true">♧</span><strong>Hali do‘stlaringiz yo‘q</strong><p><a href="{% url 'search' %}">Odamlarni toping</a> va do‘stlik so‘rovi yuboring.</p></div>
+      {% endfor %}
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}

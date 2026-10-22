@@ -1,0 +1,26 @@
+<dialog class="comments-dialog" id="comments-dialog-{{ post.id }}" aria-labelledby="comments-title-{{ post.id }}">
+  <header class="comments-dialog-header">
+    <h2 id="comments-title-{{ post.id }}">Izohlar</h2>
+    <form method="dialog"><button class="comments-close" type="submit" aria-label="Izohlarni yopish">×</button></form>
+  </header>
+  <div class="comments-dialog-body">
+    {% if post.comment_count %}
+      <ul class="comment-list">
+        {% for comment in post.comments.all %}
+          <li class="comment-item">
+            <span class="comment-avatar" aria-hidden="true">{{ comment.author.username|first|upper }}</span>
+            <p class="comment-copy"><a href="{% url 'public_profile' comment.author.username %}"><strong>{{ comment.author.username }}</strong></a> {{ comment.body }}<time>{{ comment.created_at|date:'j F, H:i' }}</time></p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="comments-empty"><strong>Hali izoh yo‘q</strong><span>Birinchi bo‘lib izoh qoldiring.</span></div>
+    {% endif %}
+  </div>
+  <form method="post" action="{% url 'add_comment' post.id %}" class="comment-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}#comments-{{ post.id }}">
+    <textarea name="body" rows="1" maxlength="500" placeholder="Izoh yozing..." aria-label="Izoh yozing" required></textarea>
+    <button class="button-secondary" type="submit">Yuborish</button>
+  </form>
+</dialog>

@@ -1,0 +1,25 @@
+{% extends 'app/base.html' %}
+{% block title %}Postni tahrirlash · Momento{% endblock %}
+{% block content %}
+<section class="community-page">
+  <a class="back-link" href="{% url 'home' %}">← Lentaga qaytish</a>
+  <div class="community-panel">
+    <p class="eyebrow">POSTINGIZ</p><h1>Postni tahrirlash</h1>
+    {% if post.video %}
+      <video class="edit-post-preview" controls preload="metadata" playsinline><source src="{{ post.video.url }}"></video>
+    {% else %}
+      <img class="edit-post-preview" src="{{ post.image.url }}" alt="{{ post.caption|default:'Post rasmi' }}">
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" class="edit-post-form">
+      {% csrf_token %}
+      <label for="{{ form.image.id_for_label }}">Rasm tanlash yoki almashtirish</label>{{ form.image }}
+      {% if form.image.errors %}<div class="field-error">{{ form.image.errors }}</div>{% endif %}
+      <label for="{{ form.video.id_for_label }}">Yoki video tanlash (MP4, WebM, MOV; 50 MB gacha)</label>{{ form.video }}
+      {% if form.video.errors %}<div class="field-error">{{ form.video.errors }}</div>{% endif %}
+      <label for="{{ form.caption.id_for_label }}">Izoh</label>{{ form.caption }}
+      {% if form.caption.errors %}<div class="field-error">{{ form.caption.errors }}</div>{% endif %}
+      <button class="button button-primary" type="submit">Saqlash ↗</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

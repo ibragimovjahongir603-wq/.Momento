@@ -1,0 +1,41 @@
+{% extends 'app/base.html' %}
+{% block title %}Odam qidirish · Momento{% endblock %}
+{% block content %}
+<section class="community-page">
+  <div class="community-panel">
+    <header class="community-heading">
+      <div><p class="eyebrow">Momento HAMJAMIYATI</p><h1>Odamlarni toping</h1><p class="community-subtitle">Do‘stlaringizni qidiring va ularning profilini ko‘ring.</p></div>
+      <a class="community-heading-link" href="{% url 'friends' %}">Do‘stlarim <span aria-hidden="true">→</span></a>
+    </header>
+    <form class="community-search" method="get" role="search">
+      <label class="visually-hidden" for="people-search">Username yoki ism bo‘yicha qidirish</label>
+      <span aria-hidden="true">⌕</span>
+      <input id="people-search" type="search" name="q" value="{{ query }}" placeholder="Username yoki ism..." autofocus>
+      {% if query %}<a class="search-clear" href="{% url 'search' %}" aria-label="Qidiruvni tozalash">×</a>{% endif %}
+      <button class="button button-primary" type="submit">Qidirish</button>
+    </form>
+    <div class="people-section-heading">
+      <h2>{% if query %}Qidiruv natijalari{% else %}Yaqinda qo‘shilganlar{% endif %}</h2>
+      <span>{{ results|length }} ta akkaunt</span>
+    </div>
+    <div class="people-list">
+      {% for person in results %}
+        <article class="person-row discover-person">
+          <a class="person-identity" href="{% url 'public_profile' person.username %}" aria-label="{{ person.username }} profilini ochish">
+            <span class="avatar avatar-discover">{% if person.profile.avatar %}<img src="{{ person.profile.avatar.url }}" alt="">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+            <span class="person-copy"><strong>{{ person.username }}</strong><span>{% if person.get_full_name %}{{ person.get_full_name }}{% else %}Momento a’zosi{% endif %}</span></span>
+          </a>
+          <span class="person-post-count">{{ person.posts.count }} post</span>
+          <a class="button button-profile" href="{% url 'public_profile' person.username %}">Profilni ko‘rish</a>
+        </article>
+      {% empty %}
+        {% if query %}
+          <div class="community-empty"><span aria-hidden="true">⌕</span><strong>Hech kim topilmadi</strong><p>“{{ query }}” bo‘yicha akkaunt yo‘q. Boshqa ism yoki username bilan urinib ko‘ring.</p></div>
+        {% else %}
+          <div class="community-empty"><span aria-hidden="true">♧</span><strong>Hozircha akkaunt yo‘q</strong><p>Boshqa odamlar ro‘yxatdan o‘tgach, shu yerda chiqadi.</p></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

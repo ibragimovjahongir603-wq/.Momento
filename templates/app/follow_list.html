@@ -1,0 +1,30 @@
+{% extends 'app/base.html' %}
+{% block title %}{{ title }} · {{ person.username }} · Momento{% endblock %}
+{% block content %}
+<section class="community-page">
+  <a class="back-link" href="{% url 'public_profile' person.username %}">← {{ person.username }} profiliga qaytish</a>
+  <div class="community-panel">
+    <header class="community-heading">
+      <div>
+        <p class="eyebrow">@{{ person.username }}</p>
+        <h1>{{ title }}</h1>
+        <p class="community-subtitle">{{ person.username }} profilidagi {{ title|lower }} ro‘yxati.</p>
+      </div>
+      <a class="community-heading-link" href="{% url 'search' %}">Odam topish <span aria-hidden="true">⌕</span></a>
+    </header>
+    <div class="people-list">
+      {% for followed_user in people %}
+        <article class="person-row">
+          <a class="person-identity" href="{% url 'public_profile' followed_user.username %}">
+            <span class="avatar avatar-discover">{% if followed_user.profile.avatar %}<img src="{{ followed_user.profile.avatar.url }}" alt="">{% else %}{{ followed_user.username|first|upper }}{% endif %}</span>
+            <span class="person-copy"><strong>{{ followed_user.username }}</strong><span>{% if followed_user.get_full_name %}{{ followed_user.get_full_name }}{% else %}Momento a’zosi{% endif %}</span></span>
+          </a>
+          <a class="button button-profile" href="{% url 'public_profile' followed_user.username %}">Profil</a>
+        </article>
+      {% empty %}
+        <div class="community-empty community-empty-compact"><span aria-hidden="true">◎</span><strong>{{ empty_message }}</strong><p>Yangi odamlarni <a href="{% url 'search' %}">qidiruvdan toping</a>.</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

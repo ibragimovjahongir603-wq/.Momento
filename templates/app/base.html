@@ -1,0 +1,111 @@
+{% load static %}
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f1e9">
+  <title>{% block title %}Momento{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'app/styles.css' %}">
+  <script src="{% static 'app/comments.js' %}" defer></script>
+  <script src="{% static 'app/upload-preview.js' %}" defer></script>
+  {% if user.is_authenticated %}
+    <script>
+      (function () {
+        const csrftoken = document.cookie
+          .split('; ')
+          .find((part) => part.startsWith('csrftoken='));
+        const csrfValue = csrftoken ? csrftoken.split('=')[1] : '';
+
+        function sendHeartbeat() {
+          fetch('{% url "heartbeat" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfValue,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({}),
+          }).catch(function (error) {
+            console.error('Faollik holatini yangilab bo‘lmadi.', error);
+          });
+        }
+
+        if (document.visibilityState === 'visible') {
+          sendHeartbeat();
+        }
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') {
+            sendHeartbeat();
+          }
+        });
+
+        window.setInterval(function () {
+          if (document.visibilityState === 'visible') {
+            sendHeartbeat();
+          }
+        }, 30000);
+      })();
+    </script>
+  {% endif %}
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="wordmark" href="{% if user.is_authenticated %}{% url 'home' %}{% else %}{% url 'login' %}{% endif %}"><span class="wordmark-icon">m</span>Momento<span class="wordmark-dot">.</span></a>
+      {% if user.is_authenticated %}
+        <div class="topbar-actions">
+          <form class="topbar-search" method="get" action="{% url 'search' %}">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" name="q" placeholder="Qidirish" aria-label="Odamlarni qidiring" value="{% if request.resolver_match.url_name == 'search' %}{{ request.GET.q }}{% endif %}">
+            <button type="submit" aria-label="Qidirish"><span aria-hidden="true">⌕</span></button>
+          </form>
+          <div
+            class="notification-center"
+            data-notification-feed="{% url 'notification_feed' %}"
+            data-notification-read-template="{% url 'notification_mark_read' 0 %}"
+          >
+            <button class="notification-toggle" type="button" aria-label="Bildirishnomalar" aria-expanded="false">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+              <span class="notification-badge" hidden></span>
+            </button>
+            <section class="notifications-panel" aria-label="Bildirishnomalar" hidden>
+              <h2>Bildirishnomalar</h2>
+              <ul class="notification-list"><li class="notification-empty">Yuklanmoqda...</li></ul>
+            </section>
+          </div>
+          <nav class="social-links" aria-label="Hamjamiyat">
+            <a href="{% url 'friends' %}" aria-label="Do‘stlar"><span aria-hidden="true">♧</span><span>Do‘stlar</span></a>
+            <a href="{% url 'inbox' %}" aria-label="Xabarlar"><span aria-hidden="true">✉</span><span>Xabarlar</span></a>
+          </nav>
+          <a class="profile-link" href="{% url 'profile' %}">
+            <span class="avatar avatar-header">
+              {% if profile.avatar %}<img src="{{ profile.avatar.url }}" alt="">{% else %}{{ user.username|first|upper }}{% endif %}
+            </span>
+            <span class="user-name">{{ user.username }}</span>
+          </a>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="logout-button" type="submit">Chiqish <span aria-hidden="true">↗</span></button>
+          </form>
+        </div>
+      {% else %}
+        <nav class="auth-top-links" aria-label="Akkaunt">
+          <a href="{% url 'login' %}">Kirish</a>
+          <a class="join-link" href="{% url 'signup' %}">Akkaunt ochish <span aria-hidden="true">↗</span></a>
+        </nav>
+      {% endif %}
+    </div>
+  </header>
+  <main class="page-main">
+    {% if messages %}
+      <div class="auth-messages" role="status">
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

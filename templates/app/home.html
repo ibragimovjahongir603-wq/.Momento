@@ -1,0 +1,103 @@
+{% extends 'app/base.html' %}
+{% block title %}Lenta · Momento{% endblock %}
+{% block content %}
+<section class="app-shell">
+  <aside class="side-nav" aria-label="Asosiy menyu">
+    <p class="side-label">MENYU</p>
+    <a class="nav-item nav-item-active" href="{% url 'home' %}"><span aria-hidden="true">⌂</span> Asosiy</a>
+    <a class="nav-item" href="#new-post"><span aria-hidden="true">＋</span> Ulashish</a>
+    <a class="nav-item" href="{% url 'profile' %}"><span aria-hidden="true">◎</span> Profil</a>
+    <a class="nav-item" href="{% url 'search' %}"><span aria-hidden="true">⌕</span> Odam qidirish</a>
+    <a class="nav-item" href="{% url 'friends' %}"><span aria-hidden="true">♧</span> Do‘stlar</a>
+    <a class="nav-item" href="{% url 'inbox' %}"><span aria-hidden="true">✉</span> Xabarlar</a>
+    <div class="sidebar-account">
+      <span class="avatar avatar-side">
+        {% if profile.avatar %}<img src="{{ profile.avatar.url }}" alt="">{% else %}{{ user.username|first|upper }}{% endif %}
+      </span>
+      <div><strong>{{ user.username }}</strong><span>Momento a’zosi</span></div>
+    </div>
+  </aside>
+
+  <div class="feed-column">
+    <div class="feed-heading">
+      <div><p class="eyebrow">SALOM, {{ user.username|upper }}</p><h1>Bugungi <em>Hikoyalar</em></h1></div>
+      <span class="feed-count">{{ posts|length }} ta surat</span>
+    </div>
+
+    <section class="composer" id="new-post" aria-labelledby="composer-title">
+      <div class="composer-heading">
+        <span class="avatar">
+          {% if profile.avatar %}<img src="{{ profile.avatar.url }}" alt="">{% else %}{{ user.username|first|upper }}{% endif %}
+        </span>
+        <div><p class="eyebrow">YANGI LAHZA</p><h2 id="composer-title">Nima bilan bo‘lishasiz?</h2></div>
+      </div>
+      <form method="post" enctype="multipart/form-data" class="post-form">
+        {% csrf_token %}
+        <label class="upload-control" for="id_image"><span aria-hidden="true">＋</span> Rasm tanlang</label>
+        {{ form.image }}
+        <label class="upload-control" for="id_video"><span aria-hidden="true">▶</span> Video tanlang</label>
+        {{ form.video }}
+        {{ form.caption }}
+        {% if form.image.errors or form.video.errors or form.caption.errors %}<div class="field-error">{{ form.image.errors }}{{ form.video.errors }}{{ form.caption.errors }}</div>{% endif %}
+        <button class="button button-primary" type="submit">Post joylash <span aria-hidden="true">↗</span></button>
+      </form>
+    </section>
+
+    <section class="post-list" aria-label="Foto lenta">
+      {% for post in posts %}
+        <article class="post">
+          <div class="post-meta">
+            <span class="avatar avatar-small">
+              {% if post.author.profile.avatar %}<img src="{{ post.author.profile.avatar.url }}" alt="">{% else %}{{ post.author.username|first|upper }}{% endif %}
+            </span>
+            <div class="post-author"><a href="{% url 'public_profile' post.author.username %}"><strong>{{ post.author.username }}</strong></a><time>{{ post.created_at|date:'j F Y, H:i' }}</time></div>
+            {% if post.author_id == user.id %}
+              <div class="post-owner-actions"><a href="{% url 'edit_post' post.id %}">Tahrirlash</a>
+                <form method="post" action="{% url 'delete_post' post.id %}">{% csrf_token %}<button type="submit">O‘chirish</button></form>
+              </div>
+            {% endif %}
+          </div>
+          {% if post.video %}
+            <video class="post-image post-video" controls preload="metadata" playsinline>
+              <source src="{{ post.video.url }}">
+              Brauzeringiz videoni qo‘llab-quvvatlamaydi.
+            </video>
+          {% elif post.image %}
+            <img class="post-image" src="{{ post.image.url }}" alt="{{ post.caption|default:'Momento tomonidan ulashilgan surat' }}">
+          {% endif %}
+          <div class="post-actions">
+            <form method="post" action="{% url 'toggle_like' post.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="like-button{% if post.is_liked %} is-liked{% endif %}" type="submit" aria-label="Yoqdi">{{ post.is_liked|yesno:"♥,♡" }}</button></form>
+            <span>{{ post.like_count }} ta yoqdi</span>
+            <button class="comment-count" type="button" data-comments-open="comments-dialog-{{ post.id }}" aria-label="{{ post.comment_count }} ta izohni ko‘rish">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2v-5.5A7.5 7.5 0 1 1 20 11.5Z"/></svg>
+              {{ post.comment_count }} ta izoh
+            </button>
+          </div>
+          {% if post.caption %}<p class="caption"><strong>{{ post.author.username }}</strong> {{ post.caption }}</p>{% endif %}
+          {% include 'app/partials/comment_section.html' with post=post %}
+        </article>
+      {% empty %}
+        <div class="empty-state"><span class="empty-mark" aria-hidden="true">✳</span><p class="eyebrow">BOSHLASHGA TAYYORMISIZ?</p><h2>Asosiyda hali surat yo‘q.</h2><p>Birinchi Hikoyangizni ulashing — u shu yerda paydo bo‘ladi.</p><a class="button button-outline" href="#new-post">Birinchi suratni qo‘shish <span aria-hidden="true">↗</span></a></div>
+      {% endfor %}
+    </section>
+  </div>
+
+  <aside class="right-rail">
+    <section class="account-card">
+      <p class="eyebrow">SIZNING PROFILINGIZ</p>
+      <div class="account-card-user">
+        <span class="avatar avatar-large">
+          {% if profile.avatar %}<img src="{{ profile.avatar.url }}" alt="">{% else %}{{ user.username|first|upper }}{% endif %}
+        </span>
+        <strong>{{ user.username }}</strong>
+      </div>
+      <a class="profile-edit-link" href="{% url 'profile' %}">Profilni sozlash <span aria-hidden="true">↗</span></a>
+    </section>
+    <figure class="inspiration-card">
+      <img src="https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&amp;fit=crop&amp;w=700&amp;q=80" alt="Tonggi quyosh nuri tushgan tog‘ manzarasi">
+      <figcaption><span>BUGUNGI ILHOM</span><strong>Yangi nigoh bilan qarang.</strong></figcaption>
+    </figure>
+    <p class="rail-footer">Momento · O‘z lahzalaringizni ulashing</p>
+  </aside>
+</section>
+{% endblock %}

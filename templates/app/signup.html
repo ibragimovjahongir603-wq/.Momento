@@ -1,0 +1,37 @@
+{% extends 'app/base.html' %}
+{% block title %}Ro'yxatdan o'tish · Momento{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-visual">
+    <img class="auth-photo" src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&amp;fit=crop&amp;w=1800&amp;q=85" alt="Tog‘lar orasidagi sokin ko‘l manzarasi">
+    <div class="auth-photo-shade"></div>
+    <div class="auth-visual-copy">
+      <span class="visual-kicker"> Momento · FOTO HAMJAMIYATI</span>
+      <h1>Dunyongizni<br>ko‘rsating.<br><em>O‘z nigohingizda.</em></h1>
+      <p>Akkaunt oching, surat joylang va boshqalarning kadrlarini ko‘ring.</p>
+    </div>
+    <span class="visual-index">02 — 04</span>
+  </div>
+  <div class="auth-side">
+    <div class="auth-panel signup-panel">
+      <p class="eyebrow">BIRINCHI QADAM</p>
+      <h2>Akkaunt yarating</h2>
+      <p class="auth-intro">Bir necha ma’lumot kiriting, keyin Asosiyga o‘tasiz.</p>
+      <form method="post" class="form-stack signup-form">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field-wrap">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<small class="field-help">{{ field.help_text|safe }}</small>{% endif %}
+          {% if field.errors %}<div class="field-error">{{ field.errors }}</div>{% endif %}
+        </div>
+      {% endfor %}
+      {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+        <button class="button button-primary" type="submit">Akkaunt yaratish <span aria-hidden="true">↗</span></button>
+      </form>
+      <p class="auth-switch">Akkauntingiz bormi? <a href="{% url 'login' %}">Kirish</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

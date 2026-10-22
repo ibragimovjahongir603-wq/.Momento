@@ -1,0 +1,75 @@
+{% extends 'app/base.html' %}
+{% block title %}Profil · Momento{% endblock %}
+{% block content %}
+<section class="profile-layout">
+  <a class="back-link" href="{% url 'home' %}">← Asosiy sahifaga qaytish</a>
+  <div class="profile-panel">
+    <p class="eyebrow">AKKAUNTINGIZ</p>
+    <h1 id="my-profile">Profilim</h1>
+    <section class="profile-social-header" aria-label="Profil ma’lumotlari">
+      <span class="avatar profile-social-avatar">
+        {% if profile.avatar %}<img src="{{ profile.avatar.url }}" alt="Joriy profil rasmi">{% else %}{{ user.username|first|upper }}{% endif %}
+      </span>
+      <div class="profile-social-details">
+        <strong class="profile-social-name">{{ user.get_full_name|default:user.username }}</strong>
+        <span class="profile-social-username">@{{ user.username }}</span>
+        <div class="profile-stat-links">
+          <a href="#my-posts"><strong>{{ posts|length }}</strong><span>post</span></a>
+          <a href="{% url 'followers' user.username %}"><strong>{{ user.followers.count }}</strong><span>obunachi</span></a>
+          <a href="{% url 'following' user.username %}"><strong>{{ user.following.count }}</strong><span>obuna</span></a>
+        </div>
+      </div>
+    </section>
+    <div class="profile-social-actions">
+      <a class="button button-profile" href="#edit-profile">Profilni tahrirlash</a>
+      <a class="button button-profile" href="{% url 'friends' %}">Do‘stlar va so‘rovlar</a>
+    </div>
+    <section class="profile-edit-section" id="edit-profile">
+      <h2>Profil sozlamalari</h2>
+      <p class="profile-section-note">Avatar rasmingizni yangilang.</p>
+      <form method="post" enctype="multipart/form-data" class="profile-form">
+      {% csrf_token %}
+      <label for="id_avatar">Yangi avatar rasmi</label>
+      {{ form.avatar }}
+      {% if form.avatar.errors %}<div class="field-error">{{ form.avatar.errors }}</div>{% endif %}
+      <button class="button button-dark" type="submit">Avatarni yangilash <span aria-hidden="true">↗</span></button>
+      </form>
+    </section>
+    <section class="profile-post-section" id="my-posts">
+      <h2>Postlar</h2>
+      <div class="profile-post-grid">
+        {% for post in posts %}
+          <article class="profile-post-tile">
+            {% if post.video %}<video controls preload="metadata" playsinline><source src="{{ post.video.url }}">Brauzeringiz videoni qo‘llab-quvvatlamaydi.</video>
+            {% elif post.image %}<img src="{{ post.image.url }}" alt="{{ post.caption|default:'Ulashilgan surat' }}">
+            {% else %}<div class="profile-post-caption">{{ post.caption }}</div>{% endif %}
+          </article>
+        {% empty %}
+          <p class="profile-post-empty">Hali post ulashmagansiz. <a href="{% url 'home' %}#new-post">Birinchi postingizni ulashing.</a></p>
+        {% endfor %}
+      </div>
+    </section>
+    <section class="story-composer">
+      <p class="eyebrow">24 SOATLIK HIKOYA</p>
+      <h2>Yangi hikoya qo‘shing</h2>
+      <form method="post" enctype="multipart/form-data" class="profile-form">
+        {% csrf_token %}
+        <input type="hidden" name="story_submit" value="1">
+        <label for="{{ story_form.image.id_for_label }}">Hikoya rasmi</label>
+        {{ story_form.image }}
+        {% if story_form.image.errors %}<div class="field-error">{{ story_form.image.errors }}</div>{% endif %}
+        <label for="{{ story_form.video.id_for_label }}">Yoki hikoya videosi (MP4, WebM, MOV; 50 MB gacha)</label>
+        {{ story_form.video }}
+        {% if story_form.video.errors %}<div class="field-error">{{ story_form.video.errors }}</div>{% endif %}
+        {{ story_form.caption }}
+        {% if story_form.caption.errors %}<div class="field-error">{{ story_form.caption.errors }}</div>{% endif %}
+        <button class="button button-dark" type="submit">Hikoyani joylash ↗</button>
+      </form>
+      {% if stories %}
+        <h3>Faol hikoyalaringiz</h3>
+        <div class="story-list">{% for story in stories %}<article class="story-card">{% if story.video %}<video controls preload="metadata" playsinline><source src="{{ story.video.url }}">Brauzeringiz videoni qo‘llab-quvvatlamaydi.</video>{% else %}<img src="{{ story.image.url }}" alt="{{ story.caption|default:'Hikoya' }}">{% endif %}{% if story.caption %}<p>{{ story.caption }}</p>{% endif %}<time>{{ story.expires_at|date:'j F, H:i' }} gacha</time></article>{% endfor %}</div>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'app/base.html' %}
+{% block title %}Kirish · Momento{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-visual">
+    <img class="auth-photo" src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&amp;fit=crop&amp;w=1800&amp;q=85" alt="Tog‘lar orasidagi sokin ko‘l manzarasi">
+    <div class="auth-photo-shade"></div>
+    <div class="auth-visual-copy">
+      <span class="visual-kicker">Momento · FOTO HAMJAMIYATI</span>
+      <h1>Ko‘rganingizni<br>ulashing.<br><em>Yodingizda qolsin.</em></h1>
+      <p>Har bir surat — siz ko‘rgan dunyoning bir bo‘lagi.</p>
+    </div>
+    <span class="visual-index">01 — 04</span>
+  </div>
+  <div class="auth-side">
+    <div class="auth-panel">
+      <p class="eyebrow">QAYTGANINGIZDAN XURSANDMIZ</p>
+      <h2>Akkauntingizga kiring</h2>
+      <p class="auth-intro">Suratlaringiz va lentangiz sizni kutmoqda.</p>
+      <form method="post" class="form-stack">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="field-wrap">
+          <label for="id_username">Foydalanuvchi nomi</label>
+          <input id="id_username" name="username" type="text" autocomplete="username" placeholder="Username" required autofocus>
+        </div>
+        <div class="field-wrap">
+          <label for="id_password">Parol</label>
+          <input id="id_password" name="password" type="password" autocomplete="current-password" placeholder="Parolingiz" required>
+        </div>
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button class="button button-primary" type="submit">Kirish <span aria-hidden="true">↗</span></button>
+      </form>
+      <p class="auth-switch">Yangi akkaunt kerakmi? <a href="{% url 'signup' %}">Ro‘yxatdan o‘ting</a></p>
+    </div>
+    <p class="auth-legal">Davom etish orqali hamjamiyat qoidalariga rozilik bildirasiz.</p>
+  </div>
+</section>
+{% endblock %}

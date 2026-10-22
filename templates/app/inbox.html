@@ -1,0 +1,36 @@
+{% extends 'app/base.html' %}
+{% block title %}Xabarlar · Asosiy{% endblock %}
+{% block content %}
+<section class="community-page">
+  <div class="community-panel">
+    <header class="community-heading">
+      <div><p class="eyebrow">SHAXSIY XABARLAR</p><h1>Xabarlar</h1><p class="community-subtitle">Do‘stlaringiz bilan suhbatlaringiz.</p></div>
+      <a class="community-heading-link" href="{% url 'friends' %}">Do‘stlarim <span aria-hidden="true">→</span></a>
+    </header>
+    <form class="community-search inbox-search" method="get" role="search">
+      <label class="visually-hidden" for="inbox-search">Suhbatlarni qidirish</label>
+      <span aria-hidden="true">⌕</span>
+      <input id="inbox-search" type="search" name="q" value="{{ query }}" placeholder="Suhbatlarni qidirish...">
+      {% if query %}<a class="search-clear" href="{% url 'inbox' %}" aria-label="Qidiruvni tozalash">×</a>{% endif %}
+      <button class="button button-primary" type="submit">Qidirish</button>
+    </form>
+    <div class="people-section-heading"><h2>Suhbatlar</h2><span>{{ friends|length }}</span></div>
+    <div class="people-list">
+      {% for person in friends %}
+        <article class="person-row inbox-person">
+          <a class="person-identity" href="{% url 'conversation' person.username %}">
+            <span class="avatar avatar-discover">{% if person.profile.avatar %}<img src="{{ person.profile.avatar.url }}" alt="">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+            <span class="person-copy"><strong>{{ person.username }}</strong><span>{% if person.last_message_body %}{{ person.last_message_body|truncatechars:56 }}{% else %}Suhbatni boshlang{% endif %}</span></span>
+          </a>
+          <div class="inbox-person-end">
+            {% if person.last_message_time %}<time>{{ person.last_message_time|date:'j M, H:i' }}</time>{% endif %}
+            <a class="button button-follow" href="{% url 'conversation' person.username %}">Ochish <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      {% empty %}
+        <div class="community-empty"><span aria-hidden="true">✉</span><strong>{% if query %}Suhbat topilmadi{% else %}Hali suhbat yo‘q{% endif %}</strong><p>{% if query %}Do‘stingizning boshqa username’i bilan qidirib ko‘ring.{% else %}Xabar yozishni boshlash uchun avval <a href="{% url 'search' %}">odamlarni toping</a> va do‘st bo‘ling.{% endif %}</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

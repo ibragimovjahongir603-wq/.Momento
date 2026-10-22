@@ -1,0 +1,119 @@
+{% extends 'app/base.html' %}
+{% block title %}{{ person.username }} bilan suhbat · Momento{% endblock %}
+{% block content %}
+<section class="community-page">
+  <div class="community-panel chat-panel">
+    <header class="chat-heading" data-presence-url="{% url 'conversation_presence' person.username %}">
+      <a class="chat-back" href="{% url 'inbox' %}" aria-label="Xabarlarga qaytish">←</a>
+      <a class="person-identity" href="{% url 'public_profile' person.username %}">
+        <span class="avatar avatar-chat">{% if person.profile.avatar %}<img src="{{ person.profile.avatar.url }}" alt="">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+        <span class="person-copy">
+          <strong>{{ person.username }}</strong>
+          <span class="chat-status-wrap">
+            <span class="chat-status-dot {% if person_online %}online{% else %}offline{% endif %}" aria-hidden="true"></span>
+            <span class="chat-status-text">{% if person_online %}Onlayn{% else %}Oflayn{% endif %}</span>
+          </span>
+        </span>
+      </a>
+      <a class="chat-profile-link" href="{% url 'public_profile' person.username %}" aria-label="Profilni ko‘rish">ⓘ</a>
+    </header>
+    <div class="chat-messages">
+      {% for message in conversation_messages %}
+        <article class="chat-message{% if message.sender_id == user.id %} chat-message-own{% endif %}">
+          <p>{{ message.body|linebreaksbr }}</p><time>{{ message.created_at|date:'j F, H:i' }}</time>
+        </article>
+      {% empty %}<div class="chat-empty"><span class="avatar avatar-chat">{% if person.profile.avatar %}<img src="{{ person.profile.avatar.url }}" alt="">{% else %}{{ person.username|first|upper }}{% endif %}</span><strong>{{ person.username }}</strong><p>Suhbatni birinchi xabaringiz bilan boshlang.</p></div>{% endfor %}
+    </div>
+    <div class="chat-typing-indicator" aria-live="polite">
+      <span class="chat-status-dot typing" aria-hidden="true"></span>
+      <span class="chat-typing-text">{{ person.username }} yozmoqda...</span>
+    </div>
+    <form method="post" class="chat-form">{% csrf_token %}<label class="visually-hidden" for="{{ form.body.id_for_label }}">Xabaringiz</label>{{ form.body }}{% if form.body.errors %}<div class="field-error">{{ form.body.errors }}</div>{% endif %}<button class="button button-primary" type="submit" aria-label="Xabar yuborish">Yuborish <span aria-hidden="true">↗</span></button></form>
+  </div>
+</section>
+<script>
+  (function () {
+    const statusText = document.querySelector('.chat-status-text');
+    const statusDot = document.querySelector('.chat-status-dot:not(.typing)');
+    const typingIndicator = document.querySelector('.chat-typing-indicator');
+    const typingText = document.querySelector('.chat-typing-text');
+    const messageField = document.querySelector('.chat-form textarea');
+  const chatHeading = document.querySelector('.chat-heading');
+  const presenceUrl = chatHeading && chatHeading.dataset.presenceUrl;
+  if (!statusText || !statusDot || !typingIndicator || !typingText || !messageField || !presenceUrl) {
+    return;
+  }
+
+  const typingLabel = '{{ person.username }} yozmoqda...';
+  let typingTimer = null;
+  let typingRequest = Promise.resolve();
+  let lastTypingState = false;
+  let lastTypingUpdate = 0;
+
+  function updatePresence(presence) {
+    if (presence.is_typing) {
+      statusText.textContent = typingLabel;
+      statusDot.classList.add('typing');
+      statusDot.classList.remove('online', 'offline');
+      typingIndicator.classList.add('active');
+      typingText.textContent = typingLabel;
+    } else {
+      statusText.textContent = presence.is_online ? 'Onlayn' : 'Oflayn';
+      statusDot.classList.remove('typing');
+      statusDot.classList.toggle('online', presence.is_online);
+      statusDot.classList.toggle('offline', !presence.is_online);
+      typingIndicator.classList.remove('active');
+    }
+  }
+
+  async function refreshPresence() {
+    const response = await fetch(presenceUrl, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error(`Suhbat holatini yangilab bo‘lmadi (${response.status})`);
+    updatePresence(await response.json());
+  }
+
+  function sendTypingState(isTyping) {
+    const now = Date.now();
+    if (isTyping && lastTypingState && now - lastTypingUpdate < 2500) return;
+    if (!isTyping && !lastTypingState) return;
+    lastTypingState = isTyping;
+    lastTypingUpdate = now;
+    const csrfCookie = document.cookie.split('; ').find((part) => part.startsWith('csrftoken='));
+    const csrfToken = csrfCookie ? csrfCookie.split('=')[1] : '';
+    typingRequest = typingRequest.then(async function () {
+      const response = await fetch(presenceUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ is_typing: isTyping }),
+      });
+      if (!response.ok) throw new Error(`Yozish holatini yuborib bo‘lmadi (${response.status})`);
+    }).catch(function (error) {
+      lastTypingState = false;
+      console.error(error);
+    });
+  }
+
+  messageField.addEventListener('input', function () {
+    clearTimeout(typingTimer);
+    sendTypingState(messageField.value.trim().length > 0);
+    typingTimer = setTimeout(function () {
+      sendTypingState(false);
+    }, 1200);
+  });
+
+  refreshPresence().catch((error) => console.error(error));
+  window.setInterval(function () {
+    if (document.visibilityState === 'visible') {
+      refreshPresence().catch((error) => console.error(error));
+    }
+  }, 3000);
+  window.addEventListener('pagehide', function () {
+    sendTypingState(false);
+  });
+})();
+</script>
+{% endblock %}
